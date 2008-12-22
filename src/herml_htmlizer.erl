@@ -48,13 +48,16 @@ render([{_, {doctype, "Frameset"}, []}|T], Env, Accum) ->
   render(T, Env, ["<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Frameset//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd\">\n"|Accum]);
 
 render([{_, Text, []}|T], Env, Accum) ->
-  render(T, Env, [Text ++ "\n"|Accum]);
+  render(T, Env, [render_text(Text) ++ "\n"|Accum]);
 
 render([{_, Text, Children}|T], Env, Accum) ->
-  render(T, Env, [Text ++ render(Children, Env)|Accum]);
+  render(T, Env, [render_text(Text) ++ render(Children, Env)|Accum]);
 
 render([], _Env, Accum) ->
   lists:reverse(Accum).
+
+render_text({text, _, Text}) ->
+  Text.
 
 render_tag(Depth, Attrs, Terminator, Env) ->
   create_whitespace(Depth) ++ "<" ++
@@ -76,7 +79,8 @@ render_inline_end_tag(Attrs) ->
 
 render_attrs(Attrs, Env) ->
   lists:foldl(fun(Attr, Accum) ->
-                  render_attr(Attr, Env, Accum) end, "", Attrs).
+                render_attr(Attr, Env, Accum) end, "", 
+              lists:sort(consolidate_classes(Attrs))).
 
 create_whitespace(Depth) ->
   create_whitespace(Depth, []).
@@ -117,4 +121,13 @@ detect_terminator(Attrs) ->
       " />";
     false ->
       ">"
+  end.
+
+consolidate_classes(Attrs) ->
+  case proplists:is_defined(class, Attrs) of
+    true ->
+      Classes = proplists:get_all_values(class, Attrs),
+      NewValue = string:join(Classes, " "),
+      [{class, NewValue}|proplists:delete(class, Attrs)];
+    _ -> Attrs
   end.

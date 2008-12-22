@@ -1,11 +1,11 @@
 Nonterminals
-tag_decl id_attr class_attr attr_list attrs attr string
+tag_decl tag_stem id_attr class_attr attr_list attrs attr string
 chr_list name name_list var_ref fun_call shortcuts
 class_list.
 
 Terminals
 tag_start class_start id_start number
-lcurly rcurly lbrace rbrace
+lcurly rcurly lbrace rbrace lparen rparen
 at comma quote chr colon slash doctype_start.
 
 Rootsymbol tag_decl.
@@ -26,6 +26,12 @@ chr_list -> class_start : ".".
 chr_list -> class_start chr_list : "." ++ '$2'.
 chr_list -> id_start : "#".
 chr_list -> id_start chr_list : "#" ++ '$2'.
+chr_list -> lparen : "(".
+chr_list -> lparen chr_list : "(" ++ '$2'.
+chr_list -> rparen : ")".
+chr_list -> rparen chr_list : ")" ++ '$2'.
+chr_list -> colon : ":".
+chr_list -> colon chr_list : ":" ++ '$2'.
 
 name -> name_list : {name, '$1'}.
 
@@ -38,8 +44,9 @@ id_attr -> id_start number : unwrap_label_attr(id, '$2').
 class_attr -> class_start name : unwrap_label_attr(class, '$2').
 
 attr_list -> lbrace rbrace : [].
-attr_list -> lbrace fun_call rbrace : ['$2'].
 attr_list -> lbrace attrs rbrace : '$2'.
+attr_list -> lbrace fun_call rbrace : ['$2'].
+attr_list -> lbrace fun_call comma attrs rbrace : ['$2'|'$4'].
 
 attrs -> attr : ['$1'].
 attrs -> attr comma attrs : ['$1'] ++ '$3'.
@@ -54,21 +61,17 @@ tag_decl -> var_ref : '$1'.
 tag_decl -> doctype_start : {doctype, "Transitional"}.
 tag_decl -> doctype_start chr_list : {doctype, '$2'}.
 
-%% named tags
-tag_decl -> tag_start name : {tag_decl, [unwrap_label_attr(tag_name, '$2')]}.
-tag_decl -> tag_start name shortcuts : {tag_decl, [unwrap_label_attr(tag_name, '$2')|'$3']}.
-tag_decl -> tag_start name attr_list : {tag_decl, lists:append([unwrap_label_attr(tag_name, '$2')], '$3')}.
-tag_decl -> tag_start name shortcuts attr_list : {tag_decl, lists:flatten([unwrap_label_attr(tag_name, '$2'), '$3', '$4'])}.
+%% singletons or containers
+tag_decl -> tag_stem : {tag_decl, '$1'}.
+tag_decl -> tag_stem slash : {tag_decl, [{singleton, true}|'$1']}.
 
-%% "singleton" named tags w/attribute lists
-tag_decl -> tag_start name slash : {tag_decl, [{singleton, true}, unwrap_label_attr(tag_name, '$2')]}.
-tag_decl -> tag_start name attr_list slash : {tag_decl, lists:append([{singleton, true}, unwrap_label_attr(tag_name, '$2')], '$3')}.
-tag_decl -> tag_start name shortcuts slash : {tag_decl, lists:flatten([{singleton, true}, unwrap_label_attr(tag_name, '$2'), '$3'])}.
-tag_decl -> tag_start name shortcuts attr_list slash : {tag_decl, lists:flatten([{singleton, true}, unwrap_label_attr(tag_name, '$2'), '$3', '$4'])}.
-
-%% default div tags
-tag_decl -> shortcuts : {tag_decl, [{tag_name, "div"}|'$1']}.
-tag_decl -> shortcuts attr_list : {tag_decl, lists:append([{tag_name, "div"}|'$1'],'$2')}.
+%% tag stems (names, ids, classes, attrs)
+tag_stem -> tag_start name : [unwrap_label_attr(tag_name, '$2')].
+tag_stem -> tag_start name shortcuts : [unwrap_label_attr(tag_name, '$2')|'$3'].
+tag_stem -> tag_start name attr_list : lists:append([unwrap_label_attr(tag_name, '$2')], '$3').
+tag_stem -> tag_start name shortcuts attr_list : lists:flatten([unwrap_label_attr(tag_name, '$2'), '$3', '$4']).
+tag_stem -> shortcuts : [{tag_name, "div"}|'$1'].
+tag_stem -> shortcuts attr_list : lists:append([{tag_name, "div"}|'$1'],'$2').
 
 %% id and class shortcuts
 shortcuts -> id_attr class_list : ['$1'|'$2'].
