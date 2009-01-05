@@ -17,7 +17,7 @@ ebin:
 ebin_tests:
 	mkdir ebin_tests
 
-special: tools src/herml_scan.erl src/herml_parse.erl
+special: tools src/herml_scan.erl src/herml_parse.erl src/herml.app
 
 ebin_tools:
 	mkdir -p tools/ebin
@@ -42,6 +42,6 @@ src/herml_parse.erl: src/herml_scan.erl
 	${ERL} -noshell -s init stop -eval 'yecc:file("src/herml_parse.yrl")'
 
 clean: clean_gen
-	rm -f ebin/*
+	rm -f ebin/*.beam
 	rm -f ebin_tests/*
 	rm -f tools/ebin/*
