@@ -2,7 +2,7 @@ Nonterminals
 tag_decl tag_stem id_attr class_attr attr_list attrs attr string
 chr_list name name_list var_ref fun_call function_call shortcuts
 class_list iter_generator iter_generator_list iter
-template_stmt doctype_name fun_attr_list fun_attrs fun_attr.
+template_stmt doctype_name fun_param_list fun_params fun_param.
 
 Terminals
 tag_start class_start id_start number
@@ -21,24 +21,24 @@ iter -> lbrace text pipe pipe iter_generator_list rbrace : {loop, {template, unw
 
 var_ref -> at name : {var_ref, unwrap('$2')}.
 fun_call -> at name colon name : {fun_call, name_to_atom('$2'), name_to_atom('$4')}.
-function_call -> at name colon name fun_attr_list : {function_call, name_to_atom('$2'), name_to_atom('$4'), '$5'}.
+function_call -> at name colon name fun_param_list : {function_call, name_to_atom('$2'), name_to_atom('$4'), '$5'}.
 
 %% function attributes
-fun_attr_list -> lparen rparen : [].
-fun_attr_list -> lparen fun_attrs rparen : '$2'.
-fun_attr_list -> lparen fun_call rparen : ['$2'].
-fun_attr_list -> lparen fun_call comma fun_attrs rparen : ['$2'|'$4'].
-fun_attr_list -> lparen fun_call comma space fun_attrs rparen : ['$2'|'$5'].
+fun_param_list -> lparen rparen : [].
+fun_param_list -> lparen fun_params rparen : '$2'.
+fun_param_list -> lparen fun_call rparen : ['$2'].
+fun_param_list -> lparen fun_call comma fun_params rparen : ['$2'|'$4'].
+fun_param_list -> lparen fun_call comma space fun_params rparen : ['$2'|'$5'].
 
-fun_attrs -> fun_attr : ['$1'].
-fun_attrs -> fun_attr comma fun_attrs : ['$1'] ++ '$3'.
-fun_attrs -> fun_attr comma space fun_attrs : ['$1'] ++ '$4'.
+fun_params -> fun_param : ['$1'].
+fun_params -> fun_param comma fun_params : ['$1'] ++ '$3'.
+fun_params -> fun_param comma space fun_params : ['$1'] ++ '$4'.
 
-fun_attr -> name : name_to_atom('$1').
-fun_attr -> string : unwrap('$1').
-fun_attr -> number : unwrap('$1').
-fun_attr -> var_ref : '$1'.
-fun_attr -> function_call : '$1'.
+fun_param -> name : name_to_atom('$1').
+fun_param -> string : unwrap('$1').
+fun_param -> number : unwrap('$1').
+fun_param -> var_ref : '$1'.
+fun_param -> function_call : '$1'.
 
 string -> quote chr_list quote : {string, '$2'}.
 string -> quote quote : {string, ""}.
