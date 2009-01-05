@@ -1,8 +1,8 @@
 Nonterminals
 tag_decl tag_stem id_attr class_attr attr_list attrs attr string
-chr_list name name_list var_ref fun_call shortcuts
+chr_list name name_list var_ref fun_call function_call shortcuts
 class_list iter_generator iter_generator_list iter
-template_stmt doctype_name.
+template_stmt doctype_name fun_attr_list fun_attrs fun_attr.
 
 Terminals
 tag_start class_start id_start number
@@ -21,6 +21,24 @@ iter -> lbrace text pipe pipe iter_generator_list rbrace : {loop, {template, unw
 
 var_ref -> at name : {var_ref, unwrap('$2')}.
 fun_call -> at name colon name : {fun_call, name_to_atom('$2'), name_to_atom('$4')}.
+function_call -> at name colon name fun_attr_list : {function_call, name_to_atom('$2'), name_to_atom('$4'), '$5'}.
+
+%% function attributes
+fun_attr_list -> lparen rparen : [].
+fun_attr_list -> lparen fun_attrs rparen : '$2'.
+fun_attr_list -> lparen fun_call rparen : ['$2'].
+fun_attr_list -> lparen fun_call comma fun_attrs rparen : ['$2'|'$4'].
+fun_attr_list -> lparen fun_call comma space fun_attrs rparen : ['$2'|'$5'].
+
+fun_attrs -> fun_attr : ['$1'].
+fun_attrs -> fun_attr comma fun_attrs : ['$1'] ++ '$3'.
+fun_attrs -> fun_attr comma space fun_attrs : ['$1'] ++ '$4'.
+
+fun_attr -> name : name_to_atom('$1').
+fun_attr -> string : unwrap('$1').
+fun_attr -> number : unwrap('$1').
+fun_attr -> var_ref : '$1'.
+fun_attr -> function_call : '$1'.
 
 string -> quote chr_list quote : {string, '$2'}.
 string -> quote quote : {string, ""}.
@@ -41,6 +59,8 @@ chr_list -> rparen : ")".
 chr_list -> rparen chr_list : ")" ++ '$2'.
 chr_list -> colon : ":".
 chr_list -> colon chr_list : ":" ++ '$2'.
+chr_list -> bang : "!".
+chr_list -> bang chr_list : "!" ++ '$2'.
 chr_list -> space : unwrap('$1').
 chr_list -> space chr_list : unwrap('$1') ++ '$2'.
 
@@ -66,10 +86,11 @@ attrs -> attr comma space attrs : ['$1'] ++ '$4'.
 
 attr -> lcurly name comma string rcurly : {name_to_atom('$2'), unwrap('$4')}.
 attr -> lcurly name comma var_ref rcurly : {name_to_atom('$2'), '$4'}.
+attr -> lcurly name comma function_call rcurly : {name_to_atom('$2'), '$4'}.
 
 attr -> lcurly name comma space string rcurly : {name_to_atom('$2'), unwrap('$5')}.
 attr -> lcurly name comma space var_ref rcurly : {name_to_atom('$2'), '$5'}.
-
+attr -> lcurly name comma space function_call rcurly : {name_to_atom('$2'), '$5'}.
 
 template_stmt -> tag_decl : '$1'.
 template_stmt -> iter : '$1'.
@@ -85,6 +106,9 @@ doctype_name -> number doctype_name : number_to_list('$1') ++ '$2'.
 
 %% raw variable ref
 tag_decl -> var_ref : '$1'.
+
+%% raw function call
+tag_decl -> function_call : '$1'.
 
 %% doctype selector
 tag_decl -> bang bang bang : {doctype, "Transitional", []}.
@@ -126,6 +150,8 @@ unwrap({string, Value}) ->
 unwrap({space, _, Value}) ->
   Value;
 unwrap({name, Value}) ->
+  Value;
+unwrap({number, _, Value}) ->
   Value.
 
 number_to_list({number, _, Value}) ->

@@ -36,9 +36,15 @@ render([{Depth, {tag_decl, Attrs}, Children}|T], Env, Accum) ->
 render([{Depth, {var_ref, VarName}, []}|T], Env, Accum) ->
   render(T, Env, [create_whitespace(Depth) ++ lookup_var(VarName, Env) ++ "\n"|Accum]);
 
+render([{Depth, {function_call, Module, Function, Parameters}, []}|T], Env, Accum) ->
+  render(T, Env, [create_whitespace(Depth) ++ erlang:apply(Module, Function, Parameters) ++ "\n"|Accum]);
+
 
 render([{_, {var_ref, VarName}, Children}|T], Env, Accum) ->
   render(T, Env, [lookup_var(VarName, Env) ++ render(Children, Env) |Accum]);
+
+render([{_, {function_call, Module, Function, Parameters}, Children}|T], Env, Accum) ->
+  render(T, Env, [erlang:apply(Module, Function, Parameters) ++ render(Children, Env) |Accum]);
 
 render([{_, {doctype, "Transitional", _}, []}|T], Env, Accum) ->
   render(T, Env, [?DOCTYPE_TRANSITIONAL|Accum]);
@@ -51,7 +57,7 @@ render([{_, {doctype, "1.1", _}, []}|T], Env, Accum) ->
 
 render([{_, {doctype, "XML", Encoding}, []}|T], Env, Accum) when is_list(Encoding) andalso Encoding /= [] ->
   render(T, Env, lists:reverse(?DOCTYPE_XML_START ++ Encoding ++ ?DOCTYPE_XML_END) ++ Accum);
-  
+
 render([{_, {doctype, "XML", []}, []}|T], Env, Accum) ->
   render(T, Env, [?DOCTYPE_XML|Accum]);
 

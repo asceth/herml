@@ -17,6 +17,7 @@ Rules.
 \@          :  {token, {at, TokenLine, TokenChars}}.
 \,          :  {token, {comma, TokenLine, TokenChars}}.
 '           :  {token, {quote, TokenLine, TokenChars}}.
+"           :  {token, {quote, TokenLine, TokenChars}}.
 \:          :  {token, {colon, TokenLine, TokenChars}}.
 \/          :  {token, {slash, TokenLine, TokenChars}}.
 !           :  {token, {bang, TokenLine, TokenChars}}.
