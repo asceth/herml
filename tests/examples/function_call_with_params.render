@@ -1,0 +1,13 @@
+<html>
+  <body>
+    <div id="text">
+      Magic Text!
+    </div>
+    <div id="number">
+      42
+    </div>
+    <div id="arity">
+      4
+    </div>
+  </body>
+</html>

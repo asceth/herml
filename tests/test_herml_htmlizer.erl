@@ -4,17 +4,30 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--export([default_attr/1]).
+-export([default_attr/1, title/0, title/1, add/2]).
 
 default_attr(_) ->
   [{color, "red"},
    {class, "foo"}].
+
+title() ->
+  "Title".
+
+title(Value) when is_integer(Value) ->
+  integer_to_list(Value);
+title(Value) ->
+  Value.
+
+add(First, Second) ->
+  integer_to_list(First + Second).
 
 render_test_() ->
   [check("tests/examples/hello_world"),
    check("tests/examples/message", [{"Message", "This is a test"}]),
    check("tests/examples/message2", [{"Message", "This is a test"}]),
    check("tests/examples/default_attr"),
+   check("tests/examples/function_call"),
+   check("tests/examples/function_call_with_params"),
    check("tests/examples/horizontal_rule"),
    check("tests/examples/close_empty"),
    check("tests/examples/doctypes"),

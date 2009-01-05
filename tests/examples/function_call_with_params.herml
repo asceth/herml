@@ -1,0 +1,8 @@
+%html
+  %body
+    #text
+      @test_herml_htmlizer:title("Magic Text!")
+    #number
+      @test_herml_htmlizer:title(42)
+    #arity
+      @test_herml_htmlizer:add(2, 2)
