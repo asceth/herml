@@ -18,6 +18,8 @@ title(Value) when is_integer(Value) ->
 title(Value) ->
   Value.
 
+add(First, Second) when is_list(First) ->
+  add(list_to_integer(First), Second);
 add(First, Second) ->
   integer_to_list(First + Second).
 
@@ -28,6 +30,7 @@ render_test_() ->
    check("tests/examples/default_attr"),
    check("tests/examples/function_call"),
    check("tests/examples/function_call_with_params"),
+   check("tests/examples/function_call_with_params2", [{"Age", 20}]),
    check("tests/examples/horizontal_rule"),
    check("tests/examples/close_empty"),
    check("tests/examples/doctypes"),

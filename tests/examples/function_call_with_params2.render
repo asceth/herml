@@ -1,0 +1,10 @@
+<html>
+  <body>
+    <div id="mixvar">
+      25
+    </div>
+    <div id="mixfun">
+      22
+    </div>
+  </body>
+</html>

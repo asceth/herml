@@ -1,0 +1,6 @@
+%html
+  %body
+    #mixvar
+      @test_herml_htmlizer:add(@Age, 5)
+    #mixfun
+      @test_herml_htmlizer:add(@test_herml_htmlizer:add(@Age, 1), 1)
