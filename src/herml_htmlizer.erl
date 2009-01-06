@@ -123,6 +123,10 @@ render_attr({Name, Value}, _Env, Accum) ->
 
 lookup_var(VarName, Env) ->
   format(proplists:get_value(VarName, Env, ""), Env).
+%% needed for function calls, must return raw format of variable
+raw_lookup_var(VarName, Env) ->
+  proplists:get_value(VarName, Env, "").
+
 
 apply_function(Module, Function, Parameters, Env) ->
   erlang:apply(Module, Function, filter_parameters(Parameters, Env)).
@@ -132,6 +136,8 @@ format(V, Env) when is_function(V) ->
   format(VR, Env);
 format(V, _Env) when is_list(V) ->
   V;
+format(V, _Env) when is_integer(V) ->
+  integer_to_list(V);
 format(V, _Env) ->
   lists:flatten(io_lib:format("~p", V)).
 
@@ -158,7 +164,7 @@ filter_parameters(Parameters, Env) ->
   lists:map(fun(Param) -> filter_parameter(Param, Env) end, Parameters).
 
 filter_parameter({var_ref, VarName}, Env) ->
-  lookup_var(VarName, Env);
+  raw_lookup_var(VarName, Env);
 filter_parameter({function_call, Module, Function, Parameters}, Env) ->
   apply_function(Module, Function, Parameters, Env);
 filter_parameter(Param, _Env) ->
