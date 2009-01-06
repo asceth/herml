@@ -39,12 +39,18 @@ render([{Depth, {var_ref, VarName}, []}|T], Env, Accum) ->
 render([{Depth, {function_call, Module, Function, Parameters}, []}|T], Env, Accum) ->
   render(T, Env, [create_whitespace(Depth) ++ apply_function(Module, Function, Parameters, Env) ++ "\n"|Accum]);
 
+render([{Depth, {fun_call, Module, Fun}, []}|T], Env, Accum) ->
+  render(T, Env, [create_whitespace(Depth) ++ Module:Fun(Env) ++ "\n"|Accum]);
+
 
 render([{_, {var_ref, VarName}, Children}|T], Env, Accum) ->
   render(T, Env, [lookup_var(VarName, Env) ++ render(Children, Env) |Accum]);
 
 render([{_, {function_call, Module, Function, Parameters}, Children}|T], Env, Accum) ->
   render(T, Env, [apply_function(Module, Function, Parameters, Env) ++ render(Children, Env) |Accum]);
+
+render([{_, {fun_call, Module, Fun}, Children}|T], Env, Accum) ->
+  render(T, Env, [Module:Fun(Env) ++ render(Children, Env) |Accum]);
 
 render([{_, {doctype, "Transitional", _}, []}|T], Env, Accum) ->
   render(T, Env, [?DOCTYPE_TRANSITIONAL|Accum]);

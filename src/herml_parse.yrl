@@ -108,6 +108,7 @@ doctype_name -> number doctype_name : number_to_list('$1') ++ '$2'.
 tag_decl -> var_ref : '$1'.
 
 %% raw function call
+tag_decl -> fun_call : '$1'.
 tag_decl -> function_call : '$1'.
 
 %% doctype selector
