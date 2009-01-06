@@ -37,14 +37,14 @@ render([{Depth, {var_ref, VarName}, []}|T], Env, Accum) ->
   render(T, Env, [create_whitespace(Depth) ++ lookup_var(VarName, Env) ++ "\n"|Accum]);
 
 render([{Depth, {function_call, Module, Function, Parameters}, []}|T], Env, Accum) ->
-  render(T, Env, [create_whitespace(Depth) ++ erlang:apply(Module, Function, Parameters) ++ "\n"|Accum]);
+  render(T, Env, [create_whitespace(Depth) ++ apply_function(Module, Function, Parameters, Env) ++ "\n"|Accum]);
 
 
 render([{_, {var_ref, VarName}, Children}|T], Env, Accum) ->
   render(T, Env, [lookup_var(VarName, Env) ++ render(Children, Env) |Accum]);
 
 render([{_, {function_call, Module, Function, Parameters}, Children}|T], Env, Accum) ->
-  render(T, Env, [erlang:apply(Module, Function, Parameters) ++ render(Children, Env) |Accum]);
+  render(T, Env, [apply_function(Module, Function, Parameters, Env) ++ render(Children, Env) |Accum]);
 
 render([{_, {doctype, "Transitional", _}, []}|T], Env, Accum) ->
   render(T, Env, [?DOCTYPE_TRANSITIONAL|Accum]);
@@ -124,6 +124,9 @@ render_attr({Name, Value}, _Env, Accum) ->
 lookup_var(VarName, Env) ->
   format(proplists:get_value(VarName, Env, ""), Env).
 
+apply_function(Module, Function, Parameters, Env) ->
+  erlang:apply(Module, Function, filter_parameters(Parameters, Env)).
+
 format(V, Env) when is_function(V) ->
   VR = V(Env),
   format(VR, Env);
@@ -148,3 +151,15 @@ consolidate_classes(Attrs) ->
       [{class, NewValue}|proplists:delete(class, Attrs)];
     _ -> Attrs
   end.
+
+filter_parameters([], _Env) ->
+  [];
+filter_parameters(Parameters, Env) ->
+  lists:map(fun(Param) -> filter_parameter(Param, Env) end, Parameters).
+
+filter_parameter({var_ref, VarName}, Env) ->
+  lookup_var(VarName, Env);
+filter_parameter({function_call, Module, Function, Parameters}, Env) ->
+  apply_function(Module, Function, Parameters, Env);
+filter_parameter(Param, _Env) ->
+  Param.
