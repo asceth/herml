@@ -1,7 +1,7 @@
 Definitions.
 
 D = [0-9]
-STRCHAR = [a-z|A-Z|0-9|_|-]
+STRCHAR = [a-z|A-Z|0-9|_]
 Rules.
 
 \-          :  {token, {dash, TokenLine, TokenChars}}.

@@ -68,6 +68,7 @@ name -> name_list : {name, '$1'}.
 
 name_list -> chr : unwrap('$1').
 name_list -> chr name_list : unwrap('$1') ++ '$2'.
+name_list -> dash name_list : unwrap('$1') ++ '$2'.
 
 id_attr -> id_start name : unwrap_label_attr(id, '$2').
 id_attr -> id_start number : unwrap_label_attr(id, '$2').
@@ -153,6 +154,8 @@ unwrap({space, _, Value}) ->
 unwrap({name, Value}) ->
   Value;
 unwrap({number, _, Value}) ->
+  Value;
+unwrap({dash, _, Value}) ->
   Value.
 
 number_to_list({number, _, Value}) ->
