@@ -27,7 +27,7 @@ parse(Contents) ->
 parse([{Depth, Text, []}|T], Accum) ->
   case herml_scan:string(string:strip(Text)) of
     {error, _, _} ->
-      parse(T, [{Depth, Text, []}|Accum]);
+      parse(T, [{Depth, {text, 0, Text}, []}|Accum]);
     {ok, Tokens, _} ->
       case herml_parse:parse(Tokens) of
         {ok, Stmt} ->
