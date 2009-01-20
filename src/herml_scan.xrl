@@ -21,6 +21,7 @@ Rules.
 \:          :  {token, {colon, TokenLine, TokenChars}}.
 \;          :  {token, {semicolon, TokenLine, TokenChars}}.
 \/          :  {token, {slash, TokenLine, TokenChars}}.
+=           :  {token, {equal, TokenLine, TokenChars}}.
 !           :  {token, {bang, TokenLine, TokenChars}}.
 \(          :  {token, {lparen, TokenLine, TokenChars}}.
 \)          :  {token, {rparen, TokenLine, TokenChars}}.

@@ -9,7 +9,7 @@ Terminals
 tag_start class_start id_start number
 lcurly rcurly lbrace rbrace lparen rparen
 at comma quote chr colon semicolon slash
-text dash lt pipe space bang.
+text dash lt pipe space bang equal.
 
 Rootsymbol template_stmt.
 
@@ -68,6 +68,8 @@ chr_list -> slash : "/".
 chr_list -> slash chr_list : "/" ++ '$2'.
 chr_list -> bang : "!".
 chr_list -> bang chr_list : "!" ++ '$2'.
+chr_list -> equal : "=".
+chr_list -> equal chr_list : "=" ++ '$2'.
 chr_list -> space : unwrap('$1').
 chr_list -> space chr_list : unwrap('$1') ++ '$2'.
 
