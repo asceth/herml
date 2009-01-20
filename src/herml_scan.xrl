@@ -19,6 +19,7 @@ Rules.
 '           :  {token, {quote, TokenLine, TokenChars}}.
 "           :  {token, {quote, TokenLine, TokenChars}}.
 \:          :  {token, {colon, TokenLine, TokenChars}}.
+\;          :  {token, {semicolon, TokenLine, TokenChars}}.
 \/          :  {token, {slash, TokenLine, TokenChars}}.
 !           :  {token, {bang, TokenLine, TokenChars}}.
 \(          :  {token, {lparen, TokenLine, TokenChars}}.

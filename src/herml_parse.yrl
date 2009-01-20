@@ -1,5 +1,6 @@
 Nonterminals
-tag_decl tag_stem id_attr class_attr attr_list attrs attr string
+tag_decl tag_stem id_attr class_attr attr_list attrs attr_name
+attr_name_list attr string
 chr_list name name_list var_ref fun_call function_call shortcuts
 class_list iter_generator iter_generator_list iter
 template_stmt doctype_name fun_param_list fun_params fun_param.
@@ -7,7 +8,7 @@ template_stmt doctype_name fun_param_list fun_params fun_param.
 Terminals
 tag_start class_start id_start number
 lcurly rcurly lbrace rbrace lparen rparen
-at comma quote chr colon slash
+at comma quote chr colon semicolon slash
 text dash lt pipe space bang.
 
 Rootsymbol template_stmt.
@@ -57,8 +58,14 @@ chr_list -> lparen : "(".
 chr_list -> lparen chr_list : "(" ++ '$2'.
 chr_list -> rparen : ")".
 chr_list -> rparen chr_list : ")" ++ '$2'.
+chr_list -> dash : "-".
+chr_list -> dash chr_list : "-" ++ '$2'.
 chr_list -> colon : ":".
 chr_list -> colon chr_list : ":" ++ '$2'.
+chr_list -> semicolon : ";".
+chr_list -> semicolon chr_list : ";" ++ '$2'.
+chr_list -> slash : "/".
+chr_list -> slash chr_list : "/" ++ '$2'.
 chr_list -> bang : "!".
 chr_list -> bang chr_list : "!" ++ '$2'.
 chr_list -> space : unwrap('$1').
@@ -68,7 +75,7 @@ name -> name_list : {name, '$1'}.
 
 name_list -> chr : unwrap('$1').
 name_list -> chr name_list : unwrap('$1') ++ '$2'.
-name_list -> dash name_list : unwrap('$1') ++ '$2'.
+name_list -> dash name_list : "-" ++ '$2'.
 
 id_attr -> id_start name : unwrap_label_attr(id, '$2').
 id_attr -> id_start number : unwrap_label_attr(id, '$2').
@@ -85,13 +92,20 @@ attrs -> attr : ['$1'].
 attrs -> attr comma attrs : ['$1'] ++ '$3'.
 attrs -> attr comma space attrs : ['$1'] ++ '$4'.
 
-attr -> lcurly name comma string rcurly : {name_to_atom('$2'), unwrap('$4')}.
-attr -> lcurly name comma var_ref rcurly : {name_to_atom('$2'), '$4'}.
-attr -> lcurly name comma function_call rcurly : {name_to_atom('$2'), '$4'}.
+attr_name -> attr_name_list : {name, '$1'}.
 
-attr -> lcurly name comma space string rcurly : {name_to_atom('$2'), unwrap('$5')}.
-attr -> lcurly name comma space var_ref rcurly : {name_to_atom('$2'), '$5'}.
-attr -> lcurly name comma space function_call rcurly : {name_to_atom('$2'), '$5'}.
+attr_name_list -> chr : unwrap('$1').
+attr_name_list -> chr attr_name_list : unwrap('$1') ++ '$2'.
+attr_name_list -> dash attr_name_list : "-" ++ '$2'.
+attr_name_list -> colon attr_name_list : ":" ++ '$2'.
+
+attr -> lcurly attr_name comma string rcurly : {name_to_atom('$2'), unwrap('$4')}.
+attr -> lcurly attr_name comma var_ref rcurly : {name_to_atom('$2'), '$4'}.
+attr -> lcurly attr_name comma function_call rcurly : {name_to_atom('$2'), '$4'}.
+
+attr -> lcurly attr_name comma space string rcurly : {name_to_atom('$2'), unwrap('$5')}.
+attr -> lcurly attr_name comma space var_ref rcurly : {name_to_atom('$2'), '$5'}.
+attr -> lcurly attr_name comma space function_call rcurly : {name_to_atom('$2'), '$5'}.
 
 template_stmt -> tag_decl : '$1'.
 template_stmt -> iter : '$1'.
