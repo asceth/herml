@@ -135,7 +135,7 @@ raw_lookup_var(VarName, Env) ->
 
 
 apply_function(Module, Function, Parameters, Env) ->
-  erlang:apply(Module, Function, filter_parameters(Parameters, Env)).
+  format(erlang:apply(Module, Function, filter_parameters(Parameters, Env)), Env).
 
 format(V, Env) when is_function(V) ->
   VR = V(Env),
@@ -144,6 +144,8 @@ format(V, _Env) when is_list(V) ->
   V;
 format(V, _Env) when is_integer(V) ->
   integer_to_list(V);
+format(V, _Env) when is_binary(V) ->
+  binary_to_list(V);
 format(V, _Env) ->
   lists:flatten(io_lib:format("~p", V)).
 
