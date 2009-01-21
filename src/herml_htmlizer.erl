@@ -116,7 +116,8 @@ create_whitespace(Depth, Accum) ->
 render_attr({fun_call, Module, Fun}, Env, Accum) ->
   R1 = Module:Fun(Env),
   render_attrs(R1, Env) ++ Accum;
-
+render_attr({Name, {function_call, Module, Function, Parameters}}, Env, Accum) ->
+  Accum ++ " " ++ atom_to_list(Name) ++ "=\"" ++ apply_function(Module, Function, Parameters, Env) ++ "\"";
 render_attr({Name, {var_ref, VarName}}, Env, Accum) ->
   Accum ++ " " ++ atom_to_list(Name) ++ "=\"" ++ lookup_var(VarName, Env) ++ "\"";
 render_attr({Name, Value}, _Env, Accum) ->
@@ -146,6 +147,8 @@ format(V, _Env) when is_integer(V) ->
   integer_to_list(V);
 format(V, _Env) when is_binary(V) ->
   binary_to_list(V);
+format(V, _Env) when is_atom(V) ->
+  atom_to_list(V);
 format(V, _Env) ->
   lists:flatten(io_lib:format("~p", V)).
 
