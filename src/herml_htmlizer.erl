@@ -19,6 +19,10 @@ render(Template, Env) ->
   render(Template, Env, []).
 
 %% Internal functions
+render([{_, {iter, Match, {var_ref, List}}, Subtemplate}|T], Env, Accum) ->
+  Result = lists:map(fun(Item) -> render(Subtemplate, iteration_env(Match, Item, Env), []) end, lookup_var(List, Env)),
+  render(T, Env, [Result|Accum]);
+
 render([{Depth, {tag_decl, Attrs}, []}|T], Env, Accum) ->
   CloseTag = case detect_terminator(Attrs) of
     ">" ->
@@ -41,7 +45,6 @@ render([{Depth, {function_call, Module, Function, Parameters}, []}|T], Env, Accu
 
 render([{Depth, {fun_call, Module, Fun}, []}|T], Env, Accum) ->
   render(T, Env, [create_whitespace(Depth) ++ Module:Fun(Env) ++ "\n"|Accum]);
-
 
 render([{_, {var_ref, VarName}, Children}|T], Env, Accum) ->
   render(T, Env, [lookup_var(VarName, Env) ++ render(Children, Env) |Accum]);
@@ -180,3 +183,8 @@ filter_parameter({function_call, Module, Function, Parameters}, Env) ->
   apply_function(Module, Function, Parameters, Env);
 filter_parameter(Param, _Env) ->
   Param.
+
+iteration_env({var_ref, Name}, Item, Env) ->
+  [{Name, Item}|Env];
+iteration_env(_,_,Env) -> Env.
+

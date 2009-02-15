@@ -37,7 +37,8 @@ render_test_() ->
    check("tests/examples/html_xml_attributes"),
    check("tests/examples/multiple_classes"),
    check("tests/examples/sort_attributes"),
-   check("tests/examples/style_attribute")].
+   check("tests/examples/style_attribute"),
+   check("tests/examples/simple_loop", [{"Users", ["kevsmith", "seancribbs"]}])].
 
 check(FileName) ->
   check(FileName, []).
