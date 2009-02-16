@@ -9,7 +9,6 @@ fun_param_list fun_params fun_param.
 Terminals
 tag_start class_start id_start number
 lcurly rcurly lbrace rbrace lparen rparen
-<<<<<<< HEAD:src/herml_parse.yrl
 at comma quote chr colon slash
 dash lt space bang underscore
 semicolon pipe text equal.
