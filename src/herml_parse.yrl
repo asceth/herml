@@ -118,9 +118,6 @@ attr -> lcurly attr_name comma space string rcurly : {name_to_atom('$2'), unwrap
 attr -> lcurly attr_name comma space var_ref rcurly : {name_to_atom('$2'), '$5'}.
 attr -> lcurly attr_name comma space function_call rcurly : {name_to_atom('$2'), '$5'}.
 
-template_stmt -> tag_decl : '$1'.
-template_stmt -> iter : '$1'.
-
 doctype_name -> chr : unwrap('$1').
 doctype_name -> chr doctype_name : unwrap('$1') ++ '$2'.
 doctype_name -> dash : "-".
