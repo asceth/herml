@@ -144,6 +144,8 @@ apply_function(Module, Function, Parameters, Env) ->
 format(V, Env) when is_function(V) ->
   VR = V(Env),
   format(VR, Env);
+format(V, _Env) when is_integer(V) ->
+  integer_to_list(V);
 format(V, _Env) when is_list(V) ->
   V;
 format(V, _Env) when is_integer(V) ->
@@ -172,6 +174,7 @@ consolidate_classes(Attrs) ->
     _ -> Attrs
   end.
 
+
 filter_parameters([], _Env) ->
   [];
 filter_parameters(Parameters, Env) ->
@@ -184,9 +187,24 @@ filter_parameter({function_call, Module, Function, Parameters}, Env) ->
 filter_parameter(Param, _Env) ->
   Param.
 
+iteration_env({tuple, Matches}, Item, Env) ->
+  iteration_env_list(Matches, tuple_to_list(Item), Env);
+iteration_env({list, Matches}, Item, Env) ->
+  iteration_env_list(Matches, Item, Env);
+iteration_env(ignore, _Item, Env) ->
+  Env;
 iteration_env({var_ref, Name}, Item, Env) ->
   [{Name, Item}|Env];
 iteration_env(_,_,Env) -> Env.
+
+iteration_env_list([Match|Matches], [Item|Items], Env) ->
+  iteration_env_list(Matches, Items, iteration_env(Match, Item, Env));
+iteration_env_list(Matches, [], _Env) when is_list(Matches) andalso length(Matches) =/= 0 ->
+  throw(bad_match);
+iteration_env_list([], [], Env) ->
+  Env;
+iteration_env_list([], _, _Env) ->
+  throw(bad_match).
 
 unindent(List) ->
   Flat = lists:flatten(List),
