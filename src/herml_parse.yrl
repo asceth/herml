@@ -11,7 +11,6 @@ tag_start class_start id_start number
 lcurly rcurly lbrace rbrace
 at comma chr colon slash
 dash lt space bang underscore string
-semicolon pipe text equal
 lparen rparen.
 
 Rootsymbol template_stmt.
