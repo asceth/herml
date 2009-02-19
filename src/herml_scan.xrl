@@ -14,6 +14,9 @@ _           :  {token, {underscore, TokenLine, TokenChars}}.
 '(\\\^.|\\.|[^'])*' :
   S = lists:sublist(TokenChars, 2, TokenLen - 2),
   {token, {string, TokenLine, S}}.
+"(\\\^.|\\.|[^"])*" :
+  S = lists:sublist(TokenChars, 2, TokenLen - 2),
+  {token, {string, TokenLine, S}}.
 {STRCHAR}+  :  {token, {chr, TokenLine, TokenChars}}.
 {           :  {token, {lcurly, TokenLine, TokenChars}}.
 }           :  {token, {rcurly, TokenLine, TokenChars}}.
