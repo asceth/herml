@@ -1,6 +1,6 @@
 Nonterminals
-tag_decl tag_stem id_attr class_attr attr_list attrs attr string
-chr_list name name_list var_ref fun_call shortcuts
+tag_decl tag_stem id_attr class_attr attr_list attrs attr name
+var_ref fun_call shortcuts
 class_list iter_item iter iter_list
 template_stmt doctype_name
 attr_name attr_name_list function_call
@@ -8,10 +8,11 @@ fun_param_list fun_params fun_param.
 
 Terminals
 tag_start class_start id_start number
-lcurly rcurly lbrace rbrace lparen rparen
-at comma quote chr colon slash
-dash lt space bang underscore
-semicolon pipe text equal.
+lcurly rcurly lbrace rbrace
+at comma chr colon slash
+dash lt space bang underscore string
+semicolon pipe text equal
+lparen rparen.
 
 Rootsymbol template_stmt.
 
@@ -50,43 +51,7 @@ fun_param -> number : unwrap('$1').
 fun_param -> var_ref : '$1'.
 fun_param -> function_call : '$1'.
 
-string -> quote chr_list quote : {string, '$2'}.
-string -> quote quote : {string, ""}.
-
-chr_list -> chr : unwrap('$1').
-chr_list -> number :  number_to_list('$1').
-chr_list -> tag_start : "%".
-chr_list -> chr chr_list : unwrap('$1') ++ '$2'.
-chr_list -> number chr_list : number_to_list('$1') ++ '$2'.
-chr_list -> tag_start chr_list : "%" ++ '$2'.
-chr_list -> class_start : ".".
-chr_list -> class_start chr_list : "." ++ '$2'.
-chr_list -> id_start : "#".
-chr_list -> id_start chr_list : "#" ++ '$2'.
-chr_list -> lparen : "(".
-chr_list -> lparen chr_list : "(" ++ '$2'.
-chr_list -> rparen : ")".
-chr_list -> rparen chr_list : ")" ++ '$2'.
-chr_list -> dash : "-".
-chr_list -> dash chr_list : "-" ++ '$2'.
-chr_list -> colon : ":".
-chr_list -> colon chr_list : ":" ++ '$2'.
-chr_list -> semicolon : ";".
-chr_list -> semicolon chr_list : ";" ++ '$2'.
-chr_list -> slash : "/".
-chr_list -> slash chr_list : "/" ++ '$2'.
-chr_list -> bang : "!".
-chr_list -> bang chr_list : "!" ++ '$2'.
-chr_list -> equal : "=".
-chr_list -> equal chr_list : "=" ++ '$2'.
-chr_list -> space : unwrap('$1').
-chr_list -> space chr_list : unwrap('$1') ++ '$2'.
-
-name -> name_list : {name, '$1'}.
-
-name_list -> chr : unwrap('$1').
-name_list -> chr name_list : unwrap('$1') ++ '$2'.
-name_list -> dash name_list : "-" ++ '$2'.
+name -> chr : {name, unwrap('$1')}.
 
 id_attr -> id_start name : unwrap_label_attr(id, '$2').
 id_attr -> id_start number : unwrap_label_attr(id, '$2').
@@ -169,7 +134,7 @@ unwrap({text, _, Value}) ->
   Value;
 unwrap({chr, _, Value}) ->
   Value;
-unwrap({string, Value}) ->
+unwrap({string, _, Value}) ->
   Value;
 unwrap({space, _, Value}) ->
   Value;
