@@ -92,9 +92,6 @@ doctype_name -> number doctype_name : number_to_list('$1') ++ '$2'.
 %% raw variable ref
 tag_decl -> var_ref : '$1'.
 
-%% raw function call
-tag_decl -> fun_call : '$1'.
-
 %% doctype selector
 tag_decl -> bang bang bang : {doctype, "Transitional", []}.
 tag_decl -> bang bang bang space : {doctype, "Transitional", []}.
@@ -142,8 +139,6 @@ unwrap({space, _, Value}) ->
 unwrap({number, _, Value}) ->
   Value;
 unwrap({name, Value}) ->
-  Value;
-unwrap({number, _, Value}) ->
   Value;
 unwrap({dash, _, Value}) ->
   Value.
