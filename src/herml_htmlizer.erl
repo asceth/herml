@@ -41,7 +41,16 @@ render([{Depth, {var_ref, VarName}, []}|T], Env, Accum) ->
   render(T, Env, [create_whitespace(Depth) ++ lookup_var(VarName, Env) ++ "\n"|Accum]);
 
 render([{_, {var_ref, VarName}, Children}|T], Env, Accum) ->
-  render(T, Env, [lookup_var(VarName, Env) ++ render(Children, Env) |Accum]);
+  render(T, Env, [lookup_var(VarName, Env) ++ render(Children, Env) | Accum]);
+
+render([{Depth, {fun_call, Module, Fun, Args}, Children}|T], Env, Accum) ->
+  Result = create_whitespace(Depth) ++ invoke_fun(Module, Fun, Args, Env) ++ "\n",
+  render(T, Env, [Result ++ render(Children, Env) | Accum]);
+
+render([{Depth, {fun_call_env, Module, Fun, Args}, Children}|T], Env, Accum) ->
+  {R, NewEnv} = invoke_fun_env(Module, Fun, Args, Env),
+  Result = create_whitespace(Depth) ++ R ++ "\n",
+  render(T, Env, [Result ++ render(Children, NewEnv) | Accum]);
 
 render([{Depth, {fun_call, Module, Fun, Args}, Children}|T], Env, Accum) ->
   Result = create_whitespace(Depth) ++ invoke_fun(Module, Fun, Args, Env) + "\n",
@@ -221,4 +230,3 @@ unindent(List) ->
 
 strip_leading_indent([32,32|T]) -> T;
 strip_leading_indent(String) -> String.
-

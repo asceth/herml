@@ -3,8 +3,7 @@ tag_decl tag_stem id_attr class_attr attr_list attrs attr name
 var_ref fun_call shortcuts
 class_list iter_item iter iter_list template_stmt
 doctype_name param param_list
-attr_name attr_name_list function_call
-fun_param_list fun_params fun_param.
+attr_name attr_name_list.
 
 Terminals
 tag_start class_start id_start number
@@ -139,6 +138,8 @@ unwrap({chr, _, Value}) ->
 unwrap({string, _, Value}) ->
   Value;
 unwrap({space, _, Value}) ->
+  Value;
+unwrap({number, _, Value}) ->
   Value;
 unwrap({name, Value}) ->
   Value;

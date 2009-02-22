@@ -4,19 +4,26 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--export([default_attr/1, title/0, title/1, add/2]).
+-export([default_attr/1, add/2]).
+-export([emit_single/1, emit_multi/2]).
+-export([emit_single/2, emit_multi/3]).
 
-default_attr(_) ->
-  [{color, "red"},
-   {class, "foo"}].
+default_attr(Env) ->
+  {[{color, "red"},
+    {class, "foo"}], Env}.
 
-title() ->
-  "Title".
+emit_single(Arg) ->
+  Arg.
 
-title(Value) when is_integer(Value) ->
-  integer_to_list(Value);
-title(Value) ->
-  Value.
+emit_multi(Arg1, Arg2) ->
+  [Arg1, Arg2].
+
+emit_single(Arg, Env) ->
+  {Arg ++ "!", Env}.
+
+emit_multi(Arg1, Arg2, Env) ->
+  {[Arg1 ++ "!", Arg2], Env}.
+
 
 add(First, Second) when is_list(First) ->
   add(list_to_integer(First), Second);
@@ -31,6 +38,11 @@ render_test_() ->
    check("tests/examples/function_call"),
    check("tests/examples/function_call_with_params"),
    check("tests/examples/function_call_with_params2", [{"Age", 20}]),
+   check("tests/examples/call_single"),
+   check("tests/examples/call_single_env"),
+   check("tests/examples/call_multi"),
+   check("tests/examples/call_multi_params", [{"Foo", "This is foo"}]),
+   check("tests/examples/call_multi_env"),
    check("tests/examples/horizontal_rule"),
    check("tests/examples/close_empty"),
    check("tests/examples/doctypes"),
