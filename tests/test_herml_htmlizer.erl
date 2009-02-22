@@ -4,7 +4,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--export([default_attr/1, add/2]).
+-export([default_attr/1, add/2, title/0]).
 -export([emit_single/1, emit_multi/2]).
 -export([emit_single/2, emit_multi/3]).
 
@@ -24,6 +24,8 @@ emit_single(Arg, Env) ->
 emit_multi(Arg1, Arg2, Env) ->
   {[Arg1 ++ "!", Arg2], Env}.
 
+title() ->
+  "Title".
 
 add(First, Second) when is_list(First) ->
   add(list_to_integer(First), Second);
