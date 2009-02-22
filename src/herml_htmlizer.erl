@@ -44,21 +44,12 @@ render([{_, {var_ref, VarName}, Children}|T], Env, Accum) ->
   render(T, Env, [lookup_var(VarName, Env) ++ render(Children, Env) | Accum]);
 
 render([{Depth, {fun_call, Module, Fun, Args}, Children}|T], Env, Accum) ->
-  Result = create_whitespace(Depth) ++ invoke_fun(Module, Fun, Args, Env) ++ "\n",
+  Result = create_whitespace(Depth) ++ format(invoke_fun(Module, Fun, Args, Env), Env) ++ "\n",
   render(T, Env, [Result ++ render(Children, Env) | Accum]);
 
 render([{Depth, {fun_call_env, Module, Fun, Args}, Children}|T], Env, Accum) ->
   {R, NewEnv} = invoke_fun_env(Module, Fun, Args, Env),
-  Result = create_whitespace(Depth) ++ R ++ "\n",
-  render(T, Env, [Result ++ render(Children, NewEnv) | Accum]);
-
-render([{Depth, {fun_call, Module, Fun, Args}, Children}|T], Env, Accum) ->
-  Result = create_whitespace(Depth) ++ invoke_fun(Module, Fun, Args, Env) + "\n",
-  render(T, Env, [Result ++ render(Children, Env) | Accum]);
-
-render([{Depth, {fun_call_env, Module, Fun, Args}, Children}|T], Env, Accum) ->
-  {R, NewEnv} = invoke_fun_env(Module, Fun, Args, Env),
-  Result = create_whitespace(Depth) ++ R ++ "\n",
+  Result = create_whitespace(Depth) ++ format(R, Env) ++ "\n",
   render(T, Env, [Result ++ render(Children, NewEnv) | Accum]);
 
 render([{_, {doctype, "Transitional", _}, []}|T], Env, Accum) ->
