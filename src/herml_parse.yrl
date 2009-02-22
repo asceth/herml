@@ -1,22 +1,22 @@
 Nonterminals
 tag_decl tag_stem id_attr class_attr attr_list attrs attr name
 var_ref fun_call shortcuts
-class_list iter_item iter iter_list
-template_stmt doctype_name
+class_list iter_item iter iter_list template_stmt
+doctype_name param param_list
 attr_name attr_name_list function_call
 fun_param_list fun_params fun_param.
 
 Terminals
 tag_start class_start id_start number
-lcurly rcurly lbrace rbrace
+lcurly rcurly lbrace rbrace lparen rparen
 at comma chr colon slash
-dash lt space bang underscore string
-lparen rparen.
+dash lt space bang underscore string.
 
 Rootsymbol template_stmt.
 
 template_stmt -> tag_decl : '$1'.
 template_stmt -> iter : '$1'.
+template_stmt -> fun_call : '$1'.
 
 iter -> dash space lbrace iter_item rbrace space lt dash space var_ref : {iter, '$4', '$10'}.
 
@@ -30,25 +30,24 @@ iter_list -> iter_item comma space iter_list : ['$1'|'$4'].
 iter_list -> iter_item comma iter_list : ['$1'|'$3'].
 
 var_ref -> at name : {var_ref, unwrap('$2')}.
-fun_call -> at name colon name : {fun_call, name_to_atom('$2'), name_to_atom('$4')}.
-function_call -> at name colon name fun_param_list : {function_call, name_to_atom('$2'), name_to_atom('$4'), '$5'}.
 
-%% function attributes
-fun_param_list -> lparen rparen : [].
-fun_param_list -> lparen fun_params rparen : '$2'.
-fun_param_list -> lparen fun_call rparen : ['$2'].
-fun_param_list -> lparen fun_call comma fun_params rparen : ['$2'|'$4'].
-fun_param_list -> lparen fun_call comma space fun_params rparen : ['$2'|'$5'].
+param -> var_ref : '$1'.
+param -> fun_call : '$1'.
+param -> name : {name, name_to_atom('$1')}.
+param -> string : unwrap_param('$1').
+param -> number : unwrap_param('$1').
 
-fun_params -> fun_param : ['$1'].
-fun_params -> fun_param comma fun_params : ['$1'] ++ '$3'.
-fun_params -> fun_param comma space fun_params : ['$1'] ++ '$4'.
+param_list -> param : ['$1'].
+param_list -> param comma param_list : ['$1'|'$3'].
+param_list -> param comma space param_list : ['$1'|'$4'].
 
-fun_param -> name : name_to_atom('$1').
-fun_param -> string : unwrap('$1').
-fun_param -> number : unwrap('$1').
-fun_param -> var_ref : '$1'.
-fun_param -> function_call : '$1'.
+fun_call -> at name colon name lparen rparen : {fun_call, name_to_atom('$2'), name_to_atom('$4'), []}.
+fun_call -> at name colon name lparen param_list rparen : {fun_call, name_to_atom('$2'), name_to_atom('$4'), '$6'}.
+fun_call -> at name colon name : {fun_call, name_to_atom('$2'), name_to_atom('$4'), []}.
+
+fun_call -> at at name colon name lparen rparen : {fun_call_env, name_to_atom('$3'), name_to_atom('$5'), []}.
+fun_call -> at at name colon name lparen param_list rparen : {fun_call_env, name_to_atom('$3'), name_to_atom('$5'), '$7'}.
+fun_call -> at at name colon name : {fun_call_env, name_to_atom('$3'), name_to_atom('$5'), []}.
 
 name -> chr : {name, unwrap('$1')}.
 
@@ -76,11 +75,11 @@ attr_name_list -> colon attr_name_list : ":" ++ '$2'.
 
 attr -> lcurly attr_name comma string rcurly : {name_to_atom('$2'), unwrap('$4')}.
 attr -> lcurly attr_name comma var_ref rcurly : {name_to_atom('$2'), '$4'}.
-attr -> lcurly attr_name comma function_call rcurly : {name_to_atom('$2'), '$4'}.
+attr -> lcurly attr_name comma fun_call rcurly : {name_to_atom('$2'), '$4'}.
 
 attr -> lcurly attr_name comma space string rcurly : {name_to_atom('$2'), unwrap('$5')}.
 attr -> lcurly attr_name comma space var_ref rcurly : {name_to_atom('$2'), '$5'}.
-attr -> lcurly attr_name comma space function_call rcurly : {name_to_atom('$2'), '$5'}.
+attr -> lcurly attr_name comma space fun_call rcurly : {name_to_atom('$2'), '$5'}.
 
 doctype_name -> chr : unwrap('$1').
 doctype_name -> chr doctype_name : unwrap('$1') ++ '$2'.
@@ -96,7 +95,6 @@ tag_decl -> var_ref : '$1'.
 
 %% raw function call
 tag_decl -> fun_call : '$1'.
-tag_decl -> function_call : '$1'.
 
 %% doctype selector
 tag_decl -> bang bang bang : {doctype, "Transitional", []}.
@@ -128,6 +126,11 @@ class_list -> class_attr : ['$1'].
 Erlang code.
 unwrap_label_attr(Label, {_, Value}) ->
   {Label, Value}.
+
+unwrap_param({string, _, Value}) ->
+  {string, Value};
+unwrap_param({number, _, Value}) ->
+  {number, Value}.
 
 unwrap({text, _, Value}) ->
   Value;

@@ -40,20 +40,17 @@ render([{Depth, {tag_decl, Attrs}, Children}|T], Env, Accum) ->
 render([{Depth, {var_ref, VarName}, []}|T], Env, Accum) ->
   render(T, Env, [create_whitespace(Depth) ++ lookup_var(VarName, Env) ++ "\n"|Accum]);
 
-render([{Depth, {function_call, Module, Function, Parameters}, []}|T], Env, Accum) ->
-  render(T, Env, [create_whitespace(Depth) ++ apply_function(Module, Function, Parameters, Env) ++ "\n"|Accum]);
-
-render([{Depth, {fun_call, Module, Fun}, []}|T], Env, Accum) ->
-  render(T, Env, [create_whitespace(Depth) ++ Module:Fun(Env) ++ "\n"|Accum]);
-
 render([{_, {var_ref, VarName}, Children}|T], Env, Accum) ->
   render(T, Env, [lookup_var(VarName, Env) ++ render(Children, Env) |Accum]);
 
-render([{_, {function_call, Module, Function, Parameters}, Children}|T], Env, Accum) ->
-  render(T, Env, [apply_function(Module, Function, Parameters, Env) ++ render(Children, Env) |Accum]);
+render([{Depth, {fun_call, Module, Fun, Args}, Children}|T], Env, Accum) ->
+  Result = create_whitespace(Depth) ++ invoke_fun(Module, Fun, Args, Env) + "\n",
+  render(T, Env, [Result ++ render(Children, Env) | Accum]);
 
-render([{_, {fun_call, Module, Fun}, Children}|T], Env, Accum) ->
-  render(T, Env, [Module:Fun(Env) ++ render(Children, Env) |Accum]);
+render([{Depth, {fun_call_env, Module, Fun, Args}, Children}|T], Env, Accum) ->
+  {R, NewEnv} = invoke_fun_env(Module, Fun, Args, Env),
+  Result = create_whitespace(Depth) ++ R ++ "\n",
+  render(T, Env, [Result ++ render(Children, NewEnv) | Accum]);
 
 render([{_, {doctype, "Transitional", _}, []}|T], Env, Accum) ->
   render(T, Env, [?DOCTYPE_TRANSITIONAL|Accum]);
@@ -116,11 +113,13 @@ create_whitespace(0, Accum) ->
 create_whitespace(Depth, Accum) ->
   create_whitespace(Depth - 1, ["  "|Accum]).
 
-render_attr({fun_call, Module, Fun}, Env, Accum) ->
-  R1 = Module:Fun(Env),
-  render_attrs(R1, Env) ++ Accum;
-render_attr({Name, {function_call, Module, Function, Parameters}}, Env, Accum) ->
-  Accum ++ " " ++ atom_to_list(Name) ++ "=\"" ++ apply_function(Module, Function, Parameters, Env) ++ "\"";
+render_attr({fun_call, Module, Fun, Args}, Env, Accum) ->
+  render_attrs(invoke_fun(Module, Fun, Args, Env), Env) ++ Accum;
+
+render_attr({fun_call_env, Module, Fun, Args}, Env, Accum) ->
+  {R, NewEnv} = invoke_fun_env(Module, Fun, Args, Env),
+  render_attrs(R, NewEnv) ++ Accum;
+
 render_attr({Name, {var_ref, VarName}}, Env, Accum) ->
   Accum ++ " " ++ atom_to_list(Name) ++ "=\"" ++ lookup_var(VarName, Env) ++ "\"";
 render_attr({Name, Value}, _Env, Accum) ->
@@ -131,15 +130,36 @@ render_attr({Name, Value}, _Env, Accum) ->
       Accum ++ " " ++ atom_to_list(Name) ++ "=\"" ++ Value ++ "\""
   end.
 
+invoke_fun(Module, Fun, Args, Env) ->
+  FinalArgs = resolve_args(Args, Env),
+  apply(Module, Fun, FinalArgs).
+
+invoke_fun_env(Module, Fun, Args, Env) ->
+  FinalArgs = resolve_args(Args, Env) ++ [Env],
+  apply(Module, Fun, FinalArgs).
+
+resolve_args(Args, Env) ->
+  resolve_args(Args, Env, []).
+
+resolve_args([{Type, Value}|T], Env, Accum) when Type =:= string;
+                                                 Type =:= number ->
+  resolve_args(T, Env, [Value | Accum]);
+resolve_args([{var_ref, VarName}|T], Env, Accum) ->
+  resolve_args(T, Env, [raw_lookup_var(VarName, Env)|Accum]);
+resolve_args([{fun_call, Module, Fun, Args}|T], Env, Accum) ->
+  Result = invoke_fun(Module, Fun, Args, Env),
+  resolve_args(T, Env, [Result|Accum]);
+resolve_args([{fun_call_env, Module, Fun, Args}|T], Env, Accum) ->
+  Result = invoke_fun_env(Module, Fun, Args, Env),
+  resolve_args(T, Env, [Result|Accum]);
+resolve_args([], _Env, Accum) ->
+  lists:reverse(Accum).
+
 lookup_var(VarName, Env) ->
   format(proplists:get_value(VarName, Env, ""), Env).
 %% needed for function calls, must return raw format of variable
 raw_lookup_var(VarName, Env) ->
   proplists:get_value(VarName, Env, "").
-
-
-apply_function(Module, Function, Parameters, Env) ->
-  format(erlang:apply(Module, Function, filter_parameters(Parameters, Env)), Env).
 
 format(V, Env) when is_function(V) ->
   VR = V(Env),
@@ -173,19 +193,6 @@ consolidate_classes(Attrs) ->
       [{class, NewValue}|proplists:delete(class, Attrs)];
     _ -> Attrs
   end.
-
-
-filter_parameters([], _Env) ->
-  [];
-filter_parameters(Parameters, Env) ->
-  lists:map(fun(Param) -> filter_parameter(Param, Env) end, Parameters).
-
-filter_parameter({var_ref, VarName}, Env) ->
-  raw_lookup_var(VarName, Env);
-filter_parameter({function_call, Module, Function, Parameters}, Env) ->
-  apply_function(Module, Function, Parameters, Env);
-filter_parameter(Param, _Env) ->
-  Param.
 
 iteration_env({tuple, Matches}, Item, Env) ->
   iteration_env_list(Matches, tuple_to_list(Item), Env);
