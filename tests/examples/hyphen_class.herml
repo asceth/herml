@@ -1,0 +1,3 @@
+.foo-bar
+%td[{class, 'foo-bar'}]
+

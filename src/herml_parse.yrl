@@ -1,5 +1,5 @@
 Nonterminals
-tag_decl tag_stem id_attr class_attr attr_list attrs attr name
+tag_decl tag_stem id_attr class_attr attr_list attrs attr name name_list
 var_ref fun_call shortcuts
 class_list iter_item iter iter_list template_stmt
 doctype_name param param_list
@@ -48,7 +48,11 @@ fun_call -> at at name colon name lparen rparen : {fun_call_env, name_to_atom('$
 fun_call -> at at name colon name lparen param_list rparen : {fun_call_env, name_to_atom('$3'), name_to_atom('$5'), '$7'}.
 fun_call -> at at name colon name : {fun_call_env, name_to_atom('$3'), name_to_atom('$5'), []}.
 
-name -> chr : {name, unwrap('$1')}.
+name -> name_list : {name, '$1'}.
+
+name_list -> chr : unwrap('$1').
+name_list -> chr name_list : unwrap('$1') ++ '$2'.
+name_list -> dash name_list : "-" ++ '$2'.
 
 id_attr -> id_start name : unwrap_label_attr(id, '$2').
 id_attr -> id_start number : unwrap_label_attr(id, '$2').
