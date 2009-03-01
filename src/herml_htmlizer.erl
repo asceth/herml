@@ -49,11 +49,11 @@ render([{_, {var_ref, VarName}, Children}|T], Env, Accum, Offset) ->
   render(T, Env, [lookup_var(VarName, Env) ++ render(Children, Env, Offset) | Accum], Offset);
 
 render([{Depth, {fun_call, Module, Fun, Args}, Children}|T], Env, Accum, Offset) ->
-  Result = create_whitespace(Depth + Offset) ++ invoke_fun(Module, Fun, Args, Env) ++ "\n",
+  Result = create_whitespace(Depth + Offset) ++ format(invoke_fun(Module, Fun, Args, Env), Env) ++ "\n",
   render(T, Env, [Result ++ render(Children, Env, Offset) | Accum], Offset);
 
 render([{Depth, {fun_call_env, Module, Fun, Args}, Children}|T], Env, Accum, Offset) ->
-  {R, NewEnv} = invoke_fun_env(Module, Fun, Args, Env, Depth + Offset),
+  {R, NewEnv} = format(invoke_fun_env(Module, Fun, Args, Env, Depth + Offset), Env),
   WS = create_whitespace(Depth + Offset),
   Result = case string:str(R, WS) of
              0 ->
@@ -126,7 +126,8 @@ create_whitespace(Depth, Accum) ->
   create_whitespace(Depth - 1, ["  "|Accum]).
 
 render_attr({fun_call, Module, Fun, Args}, Env, Accum, TotalDepth) ->
-  render_attrs(invoke_fun(Module, Fun, Args, Env), Env, TotalDepth) ++ Accum;
+  R = invoke_fun(Module, Fun, Args, Env),
+  render_attrs(R, Env, TotalDepth) ++ Accum;
 
 render_attr({fun_call_env, Module, Fun, Args}, Env, Accum, TotalDepth) ->
   {R, NewEnv} = invoke_fun_env(Module, Fun, Args, Env, TotalDepth),
@@ -134,6 +135,10 @@ render_attr({fun_call_env, Module, Fun, Args}, Env, Accum, TotalDepth) ->
 
 render_attr({Name, {var_ref, VarName}}, Env, Accum, _TotalDepth) ->
   Accum ++ " " ++ atom_to_list(Name) ++ "=\"" ++ lookup_var(VarName, Env) ++ "\"";
+render_attr({Name, {fun_call, Module, Fun, Args}}, Env, Accum, _TotalDepth) ->
+  Accum ++ " " ++ atom_to_list(Name) ++ "=\"" ++ format(invoke_fun(Module, Fun, Args, Env), Env) ++ "\"";
+render_attr({Name, {fun_call_env, Module, Fun, Args}}, Env, Accum, TotalDepth) ->
+  Accum ++ " " ++ atom_to_list(Name) ++ "=\"" ++ format(invoke_fun_env(Module, Fun, Args, Env, TotalDepth), Env) ++ "\"";
 render_attr({Name, Value}, _Env, Accum, _TotalDepth) ->
   case lists:member(Name, ?RESERVED_TAG_ATTRS) of
     true ->
