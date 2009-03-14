@@ -53,13 +53,14 @@ render([{Depth, {fun_call, Module, Fun, Args}, Children}|T], Env, Accum, Offset)
   render(T, Env, [Result ++ render(Children, Env, Offset) | Accum], Offset);
 
 render([{Depth, {fun_call_env, Module, Fun, Args}, Children}|T], Env, Accum, Offset) ->
-  {R, NewEnv} = format(invoke_fun_env(Module, Fun, Args, Env, Depth + Offset), Env),
+  {R, NewEnv} = invoke_fun_env(Module, Fun, Args, Env, Depth + Offset),
+  R1 = format(R, NewEnv),
   WS = create_whitespace(Depth + Offset),
-  Result = case string:str(R, WS) of
+  Result = case string:str(R1, WS) of
              0 ->
-               WS ++ R ++ "\n";
+               WS ++ R1 ++ "\n";
              _ ->
-               R ++ "\n"
+               R1 ++ "\n"
            end,
   render(T, Env, [Result ++ render(Children, NewEnv, Offset) | Accum], Offset);
 
@@ -138,7 +139,8 @@ render_attr({Name, {var_ref, VarName}}, Env, Accum, _TotalDepth) ->
 render_attr({Name, {fun_call, Module, Fun, Args}}, Env, Accum, _TotalDepth) ->
   Accum ++ " " ++ atom_to_list(Name) ++ "=\"" ++ format(invoke_fun(Module, Fun, Args, Env), Env) ++ "\"";
 render_attr({Name, {fun_call_env, Module, Fun, Args}}, Env, Accum, TotalDepth) ->
-  Accum ++ " " ++ atom_to_list(Name) ++ "=\"" ++ format(invoke_fun_env(Module, Fun, Args, Env, TotalDepth), Env) ++ "\"";
+  {R, _NewEnv} = invoke_fun_env(Module, Fun, Args, Env, TotalDepth),
+  Accum ++ " " ++ atom_to_list(Name) ++ "=\"" ++ format(R, Env) ++ "\"";
 render_attr({Name, Value}, _Env, Accum, _TotalDepth) ->
   case lists:member(Name, ?RESERVED_TAG_ATTRS) of
     true ->
