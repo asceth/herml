@@ -4,9 +4,13 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+-export([emit_tuple/0]).
 -export([default_attr/1, add/2, title/0]).
 -export([emit_single/1, emit_multi/2]).
 -export([emit_single/2, emit_multi/3]).
+
+emit_tuple() ->
+  {ok, admin}.
 
 default_attr(Env) ->
   {[{color, "red"},
@@ -53,9 +57,12 @@ render_test_() ->
    check("tests/examples/hyphen_class"),
    check("tests/examples/sort_attributes"),
    check("tests/examples/style_attribute"),
+   check("tests/examples/simple_pattern_match", [{"Num", 42}]),
+   check("tests/examples/complex_pattern_match"),
    check("tests/examples/simple_loop", [{"Users", ["kevsmith", "seancribbs"]}]),
    check("tests/examples/loop_with_ignores", [{"Users", [{1, "kevsmith"}, {2, "seancribbs"}]}]),
-   check("tests/examples/structured_loop", [{"Users", [{1, "kevsmith"}, {2, "seancribbs"}]}])].
+   check("tests/examples/structured_loop", [{"Users", [{1, "kevsmith"}, {2, "seancribbs"}]}])
+  ].
 
 sub_template_test_() ->
   [fun() ->
@@ -67,7 +74,7 @@ sub_template_test_() ->
 
 iteration_match_test_() ->
   [
-    iteration_bad_match("tests/examples/structured_loop", [{"Users", [{1, "kevsmith"}, {2, "seancribbs", "foobar"}]}])
+   iteration_bad_match("tests/examples/structured_loop", [{"Users", [{1, "kevsmith"}, {2, "seancribbs", "foobar"}]}])
   ].
 
 iteration_bad_match(File, Env) ->
@@ -89,3 +96,9 @@ read_file(File) ->
 render_file(File, Env) ->
   C = herml_parser:file(File ++ ".herml"),
   lists:flatten(herml_htmlizer:render(C, Env, 0)).
+
+
+
+
+
+

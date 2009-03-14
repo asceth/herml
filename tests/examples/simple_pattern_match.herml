@@ -1,0 +1,7 @@
+<-> @Num
+  2 ->
+    %td
+      @Num
+  42 ->
+    #universe
+      has been answered

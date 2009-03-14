@@ -1,0 +1,11 @@
+<-> @test_herml_htmlizer:emit_tuple()
+  {ok, admin} ->
+    #admin
+      .name
+        Admin
+  {error, none} ->
+    #error
+      You are not an admin.
+  {ok, _} ->
+    #other
+      I match everything.
