@@ -186,7 +186,7 @@ resolve_item({tuple, Matches}, Env) ->
 resolve_item({list, Matches}, Env) ->
   resolve_args(Matches, Env);
 resolve_item(ignore, _Env) ->
-  ignore.
+  '_'.
 
 lookup_var(VarName, Env) ->
   format(proplists:get_value(VarName, Env, ""), Env).
@@ -247,19 +247,23 @@ iteration_env_list([], [], Env) ->
 iteration_env_list([], _, _Env) ->
   throw(bad_match).
 
+build_match_spec(Match) ->
+  ets:match_spec_compile([{Match, [], ['$_']}]).
+
 match_subtemplates(Subtemplates, Pattern, Env, Offset) ->
   match_subtemplates(Subtemplates, resolve_item(Pattern, Env), Env, [], Offset).
 
 match_subtemplates([], _Pattern, _Env, Accum, _Offset) ->
-  Accum;
-match_subtemplates([{_Depth, {match, Match}, Children}|T], Pattern, Env, Accum, Offset)->
-  Result = render_subtemplate(resolve_item(Match, Env), Pattern, Children, Env, Offset),
+  lists:reverse(Accum);
+match_subtemplates([{_Depth, {match, Match}, Children}|T], Pattern, Env, Accum, Offset) ->
+  MatchSpec = build_match_spec(resolve_item(Match, Env)),
+  Result = render_subtemplate(ets:match_spec_run([Pattern], MatchSpec), Children, Env, Offset),
   match_subtemplates(T, Pattern, Env, [Result|Accum], Offset).
 
-render_subtemplate(Pattern, Pattern, Children, Env, Offset) ->
-  unindent(unindent(render(Children, Env, [], Offset)));
-render_subtemplate(_Match, _Pattern, _Children, _Env, _Offset) ->
-  [].
+render_subtemplate([], _Children, _Env, _Offset) ->
+  [];
+render_subtemplate(_MatchedItems, Children, Env, Offset) ->
+  unindent(unindent(render(Children, Env, [], Offset))).
 
 
 
