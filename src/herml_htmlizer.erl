@@ -28,6 +28,10 @@ render([{_, {iter, Match, {var_ref, List}}, Subtemplate}|T], Env, Accum, Offset)
                      lookup_var(List, Env)),
   render(T, Env, [Result|Accum], Offset);
 
+render([{_, {pattern, Pattern}, Subtemplate}|T], Env, Accum, Offset) when is_list(Accum) ->
+  Result = match_subtemplates(Subtemplate, Pattern, Env, Offset),
+  render(T, Env, [Result|Accum], Offset);
+
 render([{Depth, {tag_decl, Attrs}, []}|T], Env, Accum, Offset) when is_list(Accum) ->
   CloseTag = case detect_terminator(Attrs) of
     ">" ->
@@ -161,19 +165,28 @@ invoke_fun_env(Module, Fun, Args, Env, TotalDepth) ->
 resolve_args(Args, Env) ->
   resolve_args(Args, Env, []).
 
-resolve_args([{Type, Value}|T], Env, Accum) when Type =:= string;
-                                                 Type =:= number ->
-  resolve_args(T, Env, [Value | Accum]);
-resolve_args([{var_ref, VarName}|T], Env, Accum) ->
-  resolve_args(T, Env, [raw_lookup_var(VarName, Env)|Accum]);
-resolve_args([{fun_call, Module, Fun, Args}|T], Env, Accum) ->
-  Result = invoke_fun(Module, Fun, Args, Env),
-  resolve_args(T, Env, [Result|Accum]);
-resolve_args([{fun_call_env, Module, Fun, Args}|T], Env, Accum) ->
-  Result = invoke_fun_env(Module, Fun, Args, Env, 0),
-  resolve_args(T, Env, [Result|Accum]);
+resolve_args([H|T], Env, Accum) ->
+  resolve_args(T, Env, [resolve_item(H, Env)|Accum]);
 resolve_args([], _Env, Accum) ->
   lists:reverse(Accum).
+
+
+resolve_item({Type, Value}, _Env) when Type =:= string;
+                                       Type =:= number;
+                                       Type =:= name ->
+  Value;
+resolve_item({var_ref, VarName}, Env) ->
+  raw_lookup_var(VarName, Env);
+resolve_item({fun_call, Module, Fun, Args}, Env) ->
+  invoke_fun(Module, Fun, Args, Env);
+resolve_item({fun_call_env, Module, Fun, Args}, Env) ->
+  invoke_fun_env(Module, Fun, Args, Env, 0);
+resolve_item({tuple, Matches}, Env) ->
+  list_to_tuple(resolve_args(Matches, Env));
+resolve_item({list, Matches}, Env) ->
+  resolve_args(Matches, Env);
+resolve_item(ignore, _Env) ->
+  ignore.
 
 lookup_var(VarName, Env) ->
   format(proplists:get_value(VarName, Env, ""), Env).
@@ -195,6 +208,7 @@ format(V, _Env) when is_binary(V) ->
 format(V, _Env) when is_atom(V) ->
   atom_to_list(V);
 format(V, _Env) ->
+  io:format("Failsafe: ~p", [V]),
   lists:flatten(io_lib:format("~p", V)).
 
 detect_terminator(Attrs) ->
@@ -233,6 +247,23 @@ iteration_env_list([], [], Env) ->
   Env;
 iteration_env_list([], _, _Env) ->
   throw(bad_match).
+
+match_subtemplates(Subtemplates, Pattern, Env, Offset) ->
+  match_subtemplates(Subtemplates, resolve_item(Pattern, Env), Env, [], Offset).
+
+match_subtemplates([], _Pattern, _Env, Accum, _Offset) ->
+  Accum;
+match_subtemplates([{_Depth, {match, Match}, Children}|T], Pattern, Env, Accum, Offset)->
+  Result = render_subtemplate(resolve_item(Match, Env), Pattern, Children, Env, Offset),
+  match_subtemplates(T, Pattern, Env, [Result|Accum], Offset).
+
+render_subtemplate(Pattern, Pattern, Children, Env, Offset) ->
+  unindent(unindent(render(Children, Env, [], Offset)));
+render_subtemplate(_Match, _Pattern, _Children, _Env, _Offset) ->
+  [].
+
+
+
 
 unindent(List) ->
   Flat = lists:flatten(List),
