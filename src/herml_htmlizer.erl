@@ -208,7 +208,6 @@ format(V, _Env) when is_binary(V) ->
 format(V, _Env) when is_atom(V) ->
   atom_to_list(V);
 format(V, _Env) ->
-  io:format("Failsafe: ~p", [V]),
   lists:flatten(io_lib:format("~p", V)).
 
 detect_terminator(Attrs) ->
