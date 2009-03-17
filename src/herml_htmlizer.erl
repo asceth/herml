@@ -258,7 +258,12 @@ match_subtemplates([], _Pattern, _Env, Accum, _Offset) ->
 match_subtemplates([{_Depth, {match, Match}, Children}|T], Pattern, Env, Accum, Offset) ->
   MatchSpec = build_match_spec(resolve_item(Match, Env)),
   Result = render_subtemplate(ets:match_spec_run([Pattern], MatchSpec), Children, Env, Offset),
-  match_subtemplates(T, Pattern, Env, [Result|Accum], Offset).
+  case Result of
+    [] ->
+      match_subtemplates(T, Pattern, Env, [Result|Accum], Offset);
+    _Result ->
+      [Result|Accum]
+  end.
 
 render_subtemplate([], _Children, _Env, _Offset) ->
   [];
